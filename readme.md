@@ -1,6 +1,6 @@
-# GhostZen Jaseci
+# GhostZen Jacinator
 
-GhostZen is an interactive game where **the player takes the role of the Akinator**. Instead of the AI guessing your character, you ask questions to a language-model-powered bot to get hints and try to guess the hidden entity. Multiple players can play simultaneously, and a **leaderboard** keeps track of scores.
+GhostZen Jacinator is an interactive game where **the player takes the role of the Akinator**. Instead of the AI guessing your character, you ask questions to a language-model-powered bot to get hints and try to guess the hidden entity. Multiple players can play simultaneously, and a **leaderboard** keeps track of scores.
 
 ---
 
