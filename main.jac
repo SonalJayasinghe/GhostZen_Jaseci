@@ -87,7 +87,7 @@ walker PlayGame {
             {"userName" : self.userName , "message" : "You successfully guessed" } ;
         } else {
             report
-            {"userName" : self.userName , "message" : "Your guess was in correct" , "attempts_left" : (activeGame.max_attempts - activeGame.current_attempt) , "hint" : turn.response.message , } ;
+            {"userName" : self.userName , "message" : "Your guess was incorrect" , "attempts_left" : (activeGame.max_attempts - activeGame.current_attempt) , "hint" : turn.response.message , } ;
         }
     }
 
