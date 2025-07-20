@@ -4,7 +4,8 @@ GhostZen Jacinator is an interactive game where **the player takes the role of t
 
 ---
 
-[![Watch the demo](https://img.youtube.com/vi/XIKz-AyYPCw/0.jpg)](https://www.youtube.com/watch?v=XIKz-AyYPCw)
+[![GhostZen Jacinator Demo](https://img.youtube.com/vi/4544u8PbSyU/hqdefault.jpg)](https://youtu.be/4544u8PbSyU)
+
 
 ---
 
