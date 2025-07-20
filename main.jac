@@ -56,29 +56,15 @@ node Turn {
 }
 
 
-node Leaderboard {
-    has users: list[UserResult] = [];
-}
-
-
-def create_or_get_leaderboard()  -> Leaderboard {
-    leaderboardQuery = [root-->( ` ? Leaderboard ) ];
-    if leaderboardQuery {
-        return leaderboardQuery[0];
-    } else {
-        return (root ++> Leaderboard())[0];
-    }
-}
-
-
 walker ShowLeaderboard {
     obj __specs__ {
         static has auth: bool = False;
     }
 
     can show_leaderboard with `root entry {
-        leaderboard = create_or_get_leaderboard();
-        report {"users" : leaderboard.users , } ;
+        users = [root-->( ` ? User ) ];
+        users.sort(key=sortUserKey, reverse=True);
+        report {"users" : users , } ;
     }
 }
 
@@ -106,8 +92,6 @@ walker PlayGame {
     }
 
     def create_or_get_user -> User {
-        print("All users before");
-        print("all users", [root-->( ` ? User ) ]);
         userQuery = [root-->( ` ? User : userName == self.userName ) ];
         if userQuery {
             return userQuery[0];
@@ -172,20 +156,10 @@ walker UpdatePlayerResult {
         if self.won_game {
             here.games_won += 1;
         }
-        self.update_leaderboard(here);
-    }
-
-    def update_leaderboard(user: User) {
-        leaderboard = create_or_get_leaderboard();
-        leaderboard.users =
-            [ x for x in leaderboard.users if x.userName != user.userName ];
-        leaderboard.users.append(UserResult(userName=user.userName, score=user.score));
-        leaderboard.users = sorted(leaderboard.users, key=sortKey);
-        leaderboard.users = leaderboard.users[ 0 : 5 ];
     }
 }
 
 
-def sortKey(user: UserResult) {
+def sortUserKey(user: User) {
     return user.score;
 }
