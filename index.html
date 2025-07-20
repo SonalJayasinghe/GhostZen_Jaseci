@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Akinator Chat Game</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-900 via-fuchsia-800 to-blue-700 min-h-screen flex items-center justify-center p-4 select-none">
+  <div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <div id="chatPanel" class="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl flex flex-col h-[80vh]">
+      <div class="px-6 py-4 bg-purple-700 text-white rounded-t-2xl font-bold text-lg flex items-center gap-2">
+        <span class="text-2xl">🧞‍♂️</span> Akinator
+      </div>
+      <div id="messages" class="flex-1 overflow-y-auto px-6 py-4 space-y-4"></div>
+      <div class="border-t px-4 py-3 flex gap-2 bg-white/90 rounded-b-2xl">
+        <input id="userInput" type="text" placeholder="Ask a question or guess…" class="flex-1 rounded-xl px-4 py-2 border focus:outline-none focus:ring-2 focus:ring-purple-500" />
+        <button id="sendBtn" type="button" class="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-xl shadow">Send</button>
+      </div>
+    </div>
+
+    <div id="leadPanel" class="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl h-[80vh] overflow-y-auto flex flex-col">
+      <div class="px-6 py-4 bg-teal-600 text-white rounded-t-2xl font-bold text-lg flex items-center gap-2">
+        <span class="text-2xl">🏆</span> Leaderboard
+      </div>
+
+
+      <div id="attemptContainer" class="px-6 py-4">
+        <p class="text-sm font-semibold text-gray-700 mb-2">Attempts left</p>
+        <div class="w-full bg-gray-300 rounded-full h-3 overflow-hidden shadow-inner">
+          <div id="attemptBar" class="bg-gradient-to-r from-green-400 via-yellow-400 to-red-500 h-3 transition-all" style="width:100%"></div>
+        </div>
+        <p class="text-xs mt-1 text-gray-600"><span id="attemptsLeft">10</span> / 10</p>
+      </div>
+
+
+      <ul id="leaderboard" class="px-4 pb-6 space-y-3 flex-1 overflow-y-auto"></ul>
+    </div>
+  </div>
+
+  <div id="nameModal" class="fixed inset-0 bg-black/60 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded-xl w-80 space-y-4 shadow-xl">
+      <h2 class="text-xl font-bold text-center">Enter Your Name</h2>
+      <input id="nameInput" type="text" placeholder="Your name" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+      <button id="saveNameBtn" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-2 rounded-lg">Start Game</button>
+    </div>
+  </div>
+
+  <div id="statusPopup" class="fixed inset-0 bg-black/60 flex items-center justify-center hidden">
+    <div id="statusBox" class="bg-white text-center rounded-2xl px-8 py-6 shadow-xl space-y-4">
+      <p id="statusText" class="text-xl font-bold"></p>
+      <p class="text-sm text-gray-600">Restarting in 5 seconds…</p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8000/walker";
+    const MAX_ATTEMPTS = 10;
+
+    function setCookie(name, value, days = 30) {
+      const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+    }
+    function getCookie(name) {
+      return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1];
+    }
+
+    const nameModal = document.getElementById("nameModal");
+    const nameInput = document.getElementById("nameInput");
+    const saveNameBtn = document.getElementById("saveNameBtn");
+    const messagesEl = document.getElementById("messages");
+    const userInputEl = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const attemptsLeftEl = document.getElementById("attemptsLeft");
+    const attemptBarEl = document.getElementById("attemptBar");
+    const leaderboardEl = document.getElementById("leaderboard");
+    const statusPopup = document.getElementById("statusPopup");
+    const statusTextEl = document.getElementById("statusText");
+
+    let username = getCookie("akinator_username");
+    let currentAttempts = MAX_ATTEMPTS; 
+
+    if (!username) {
+      nameModal.classList.remove("hidden");
+      nameInput.focus();
+    } else {
+      startGame();
+    }
+
+    saveNameBtn.addEventListener("click", () => {
+      const val = nameInput.value.trim();
+      if (val) {
+        username = val;
+        setCookie("akinator_username", val);
+        nameModal.classList.add("hidden");
+        startGame();
+      }
+    });
+
+    function startGame() {
+      clearChat();
+      updateAttemptsLeft(MAX_ATTEMPTS);
+      addMessage("Akinator", "Buh hah haa! I have a character in mind. You have 10 attempts—ask questions or make a guess!");
+      fetchLeaderboard();
+    }
+
+    function clearChat() {
+      messagesEl.innerHTML = "";
+    }
+
+    function addMessage(sender, text) {
+      const bubble = document.createElement("div");
+      const base = "max-w-[80%] px-4 py-2 rounded-2xl shadow";
+      if (sender === "You") {
+        bubble.className = `${base} bg-indigo-600 text-white self-end`;
+      } else {
+        bubble.className = `${base} bg-gray-200 text-gray-800 self-start`;
+      }
+      bubble.textContent = text;
+      messagesEl.appendChild(bubble);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function updateAttemptsLeft(left) {
+      currentAttempts = left; 
+      const pct = (left / MAX_ATTEMPTS) * 100;
+      attemptBarEl.style.width = pct + "%";
+      attemptsLeftEl.textContent = left;
+    }
+
+    function showStatus(text) {
+      statusTextEl.textContent = text;
+      statusPopup.classList.remove("hidden");
+
+      setTimeout(() => {
+        statusPopup.classList.add("hidden");
+        startGame();
+      }, 5000);
+    }
+
+    sendBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleSend();
+    });
+    userInputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+
+    async function handleSend() {
+      const text = userInputEl.value.trim();
+      if (!text) return;
+      addMessage("You", text);
+      userInputEl.value = "";
+
+      try {
+        const res = await fetch(API_BASE + "/PlayGame", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userName: username, guess_or_question: text })
+        });
+        const data = await res.json();
+
+        if (data.reports && data.reports.length) {
+          const rep = data.reports[0];
+
+          if (typeof rep.attempts_left === "number") {
+            updateAttemptsLeft(rep.attempts_left);
+            if (rep.attempts_left === 0) {
+              showStatus("😢 You Lost! Starting a New Game");
+              return; 
+            }
+          }
+
+          if (rep.message) {
+            addMessage("Akinator", rep.message);
+          }
+
+          if (/successfully\s+guessed/i.test(rep.message || "")) {
+            showStatus("🏆 Congrats! You Won! Starting a New Game");
+            return; 
+          }
+
+          if (rep.hint) {
+            const cleanedHint = rep.hint.replace(/^Hint:\s*/i, "");
+            if (cleanedHint) addMessage("Akinator", cleanedHint);
+          }
+        }
+        fetchLeaderboard();
+      } catch (err) {
+        console.error(err);
+        addMessage("Akinator", "😢 Oops! Something went wrong. Try again later.");
+      }
+    }
+
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch(API_BASE + "/ShowLeaderboard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.reports && data.reports.length) {
+          const users = data.reports[0].users || [];
+          users.sort((a, b) => (b.context.score || 0) - (a.context.score || 0));
+
+          leaderboardEl.innerHTML = "";
+          users.forEach((u, idx) => {
+            const li = document.createElement("li");
+            li.className = "flex items-center justify-between bg-white/90 rounded-xl p-3 shadow border-l-8";
+            const borders = ["border-yellow-400", "border-gray-300", "border-orange-500", "border-transparent"];
+            li.classList.add(borders[idx] || "border-transparent");
+            const medals = ["🥇", "🥈", "🥉", ""]; 
+            li.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="text-xl">${medals[idx] || idx + 1}</span>
+                <div>
+                  <p class="font-semibold">${u.context.userName}</p>
+                  <p class="text-xs text-gray-500">Played: ${u.context.games_played ?? 0} · Won: ${u.context.games_won ?? 0}</p>
+                </div>
+              </div>
+              <span class="font-bold text-lg">${u.context.score ?? 0}</span>`;
+            leaderboardEl.appendChild(li);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
