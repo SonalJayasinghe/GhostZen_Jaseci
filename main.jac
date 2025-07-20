@@ -122,13 +122,14 @@ walker PlayGame {
             );
         if response.character_name_guessed {
             game.won = True;
+            score = 100 * (game.max_attempts - game.current_attempt + 1);
             game.completed = True;
         }
         if (game.current_attempt == game.max_attempts) {
+            score = 0;
             game.completed = True;
         }
         if game.completed {
-            score = 100 * (game.max_attempts - game.current_attempt - 1);
             UpdatePlayerResult(won_game=game.won, score=score) spawn game;
         }
         return (game ++> Turn(
