@@ -32,13 +32,33 @@ jac-env\Scripts\activate
 pip install jaclang jac-cloud mtllm
 ```
 
-### 4. Run the Jaseci Cloud Server
+### 4. Export OpenAI API Key
+
+Replace `your-api-key-here` with your actual API key.
+
+#### On macOS/Linux:
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+#### On Windows (Command Prompt):
+```cmd
+set OPENAI_API_KEY="your-api-key-here"
+```
+
+#### On Windows (PowerShell):
+```powershell
+$env:OPENAI_API_KEY="your-api-key-here"
+```
+
+### 5. Run the Jaseci Cloud Server
 
 ```bash
 jac serve main.jac
 ```
 
 > ⚠️ Ensure you are in the directory where `main.jac` is located when running the above command.
+
 
 ---
 
